@@ -7,8 +7,6 @@ import {
 // import { WidgetTracker } from '@jupyterlab/apputils';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Menu, Widget } from '@lumino/widgets';
-import { IRequestResult, request } from 'requests-helper';
-import { PageConfig } from '@jupyterlab/coreutils';
 
 // Temporary way to get links
 // Eventually want to put this in config file
@@ -35,7 +33,9 @@ class IFrameWidget extends Widget {
     this.title.iconClass = iconClass;
     this.title.label = title;
     this.title.closable = true;
+  }
 
+  public async createIFrame(title: string, path: string): Promise<boolean> {
     unique += 1;
 
     // add entire window to a iframe-widget class div
@@ -44,50 +44,26 @@ class IFrameWidget extends Widget {
     const iframe = document.createElement('iframe');
 
     try {
-      request('get', path).then((res: IRequestResult) => {
-        if (res.ok && !res.headers.includes('Access-Control-Allow-Origin')) {
+      await fetch(path).then((res: Response) => {
+        console.log('Headers:');
+        console.log(res.headers.keys());
+        if (res.ok && !res.headers.has('Access-Control-Allow-Origin')) {
           iframe.src = path;
-          const favicon_url = `https://www.google.com/s2/favicons?domain=${path}`;
-
-          request('get', favicon_url).then((res2: IRequestResult) => {
-            if (res2.ok) {
-              const style = document.createElement('style');
-              style.innerHTML = `div.${iconClass} { background: url("${favicon_url}"); }`;
-              document.head.appendChild(style);
-            }
-          });
         } else {
-          console.log(`site failed with no code: ${res.status.toString()}`);
+          // this means the fetch failed
+          console.log('site failed with no code');
+          return false;
         }
       });
     } catch (e) {
+      // the request failed so try to proxy instead
       console.log(e);
-
-      try {
-        // otherwise try to proxy
-        const favicon_url = `${PageConfig.getBaseUrl()}iframes/proxy?path=${
-          new URL('/favicon.ico', path).href
-        }`;
-
-        path = `iframes/proxy?path=${encodeURI(path)}`;
-        iframe.src = PageConfig.getBaseUrl() + path;
-        // eslint-disable-next-line no-console
-        console.log(`setting proxy for ${path}`);
-
-        request('get', favicon_url).then((res2: IRequestResult) => {
-          if (res2.ok) {
-            const style = document.createElement('style');
-            style.innerHTML = `div.${iconClass} { background: url("${favicon_url}"); }`;
-            document.head.appendChild(style);
-          }
-        });
-      } catch (e) {
-        console.log(e);
-      }
+      return false;
     }
 
     div.appendChild(iframe);
     this.node.appendChild(div);
+    return true;
   }
 }
 
@@ -99,7 +75,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   optional: [IMainMenu],
   // requires: [IMainMenu, ILayoutRestorer],
-  activate: (
+  activate: async (
     app: JupyterFrontEnd,
     mainMenu: IMainMenu
     // restorer: ILayoutRestorer
@@ -109,7 +85,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const nerscHelpMenu: Menu = new Menu({ commands });
     nerscHelpMenu.title.label = 'NERSC Help';
-    let restoreCommand: string;
+    // let restoreCommand: string;
     // let widget: MainAreaWidget<IFrameWidget>;
 
     // Loop through links and add each as a window.open() command
@@ -119,19 +95,25 @@ const extension: JupyterFrontEndPlugin<void> = {
       commands.addCommand(command, {
         label: `${link.name}`,
         caption: `${link.name}`,
-        execute: () => {
+        execute: async () => {
           // use widget to open in new Jupyter tab
           const widget = new IFrameWidget(link.name, link.url);
-
+          const response = await widget.createIFrame(link.name, link.url);
+          console.log(`Response: ${response}`);
           // tracker.add(widget);
 
-          app.shell.add(widget, 'main');
-          app.shell.activateById(widget.id);
+          // check if the IFrame was created correctly
+          // if so open it in a jupyter notebook tab
+          // otherwise open it in a browser tab
+          if (response) {
+            app.shell.add(widget, 'main');
+            app.shell.activateById(widget.id);
+          } else {
+            window.open(link.url);
+          }
 
-          // Or use window.open to open in new browser tab
-          // window.open(link.url);
-          restoreCommand = command;
-          console.log(`Restore command set to: (${restoreCommand})`);
+          // restoreCommand = command;
+          // console.log(`Restore command set to: (${restoreCommand})`);
         }
       });
 
