@@ -46,7 +46,8 @@
   },
   "dependencies": {
     "@jupyterlab/application": "^3.0.0",
-    "@jupyterlab/mainmenu": "^3.0.7"
+    "@jupyterlab/mainmenu": "^3.0.7",
+    "requests-helper": "^0.1.5"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.0.0",
