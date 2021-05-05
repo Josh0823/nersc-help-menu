@@ -1,8 +1,10 @@
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
+  // ILayoutRestorer
 } from '@jupyterlab/application';
 
+// import { WidgetTracker } from '@jupyterlab/apputils';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Menu, Widget } from '@lumino/widgets';
 import { IRequestResult, request } from 'requests-helper';
@@ -96,12 +98,19 @@ const extension: JupyterFrontEndPlugin<void> = {
   id: 'nersc-help-menu:plugin',
   autoStart: true,
   optional: [IMainMenu],
-  activate: (app: JupyterFrontEnd, mainMenu: IMainMenu) => {
+  // requires: [IMainMenu, ILayoutRestorer],
+  activate: (
+    app: JupyterFrontEnd,
+    mainMenu: IMainMenu
+    // restorer: ILayoutRestorer
+  ) => {
     console.log('JupyterLab extension nersc-help-menu is activated!');
     const { commands } = app;
 
     const nerscHelpMenu: Menu = new Menu({ commands });
     nerscHelpMenu.title.label = 'NERSC Help';
+    let restoreCommand: string;
+    // let widget: MainAreaWidget<IFrameWidget>;
 
     // Loop through links and add each as a window.open() command
     LINKS.forEach(link => {
@@ -113,17 +122,32 @@ const extension: JupyterFrontEndPlugin<void> = {
         execute: () => {
           // use widget to open in new Jupyter tab
           const widget = new IFrameWidget(link.name, link.url);
-          app.shell.add(widget);
+
+          // tracker.add(widget);
+
+          app.shell.add(widget, 'main');
           app.shell.activateById(widget.id);
 
           // Or use window.open to open in new browser tab
           // window.open(link.url);
+          restoreCommand = command;
+          console.log(`Restore command set to: (${restoreCommand})`);
         }
       });
 
       // add each command to the nersc help menu
       nerscHelpMenu.addItem({ command });
     });
+
+    // Tried to set up restore for opened docs
+    // const tracker = new WidgetTracker<IFrameWidget>({
+    //   namespace: 'nersc-help-menu'
+    // });
+    // console.log(`Restoring with command: (${restoreCommand})`);
+    // restorer.restore(tracker, {
+    //   command: restoreCommand,
+    //   name: () => 'nersc-help-menu'
+    // });
 
     // add NERSC help menu to main menu
     // mainMenu.addMenu(nerscHelpMenu, { rank: 2000 });
