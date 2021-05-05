@@ -12,10 +12,6 @@ import { PageConfig } from '@jupyterlab/coreutils';
 // Eventually want to put this in config file
 const LINKS = [
   {
-    name: 'NERSC Homepage',
-    url: 'https://www.nersc.gov'
-  },
-  {
     name: 'NERSC Jupyter Docs',
     url: 'https://docs.nersc.gov/services/jupyter'
   },
@@ -49,7 +45,7 @@ class IFrameWidget extends Widget {
       request('get', path).then((res: IRequestResult) => {
         if (res.ok && !res.headers.includes('Access-Control-Allow-Origin')) {
           iframe.src = path;
-          const favicon_url = new URL('/favicon.ico', path).href;
+          const favicon_url = `https://www.google.com/s2/favicons?domain=${path}`;
 
           request('get', favicon_url).then((res2: IRequestResult) => {
             if (res2.ok) {
@@ -130,18 +126,18 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     // add NERSC help menu to main menu
-    mainMenu.addMenu(nerscHelpMenu, { rank: 2000 });
+    // mainMenu.addMenu(nerscHelpMenu, { rank: 2000 });
 
     // add NERSC help menu as a submenu of the help menu
-    // mainMenu.helpMenu.addGroup(
-    //   [
-    //     {
-    //       type: 'submenu' as Menu.ItemType,
-    //       submenu: nerscHelpMenu
-    //     }
-    //   ],
-    //   1
-    // );
+    mainMenu.helpMenu.addGroup(
+      [
+        {
+          type: 'submenu' as Menu.ItemType,
+          submenu: nerscHelpMenu
+        }
+      ],
+      1
+    );
   }
 };
 
