@@ -1,0 +1,14 @@
+{
+    "title": "NERSC Help Menu",
+    "description": "NERSC Help Menu settings",
+    "type": "object",
+    "properties": {
+        "links": {
+            "type": "array",
+            "title": "NERSC Help Menu links",
+            "description": "What links to display in the NERSC help menu\nFormat: { name: string, url: string }\nExample: { name: \"Google\", url: \"google.com\" }",
+            "default": []
+        }
+    },
+    "additionalProperties": false
+}
