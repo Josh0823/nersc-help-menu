@@ -12,7 +12,7 @@ A JupyterLab extension.
 
 ## Install
 
-To install the extension, execute the following command inside the root `nersc_help_menu` folder:
+To install the extension, execute the following command inside the root `nersc-help-menu` folder:
 
 ```bash
 pip install .
@@ -23,7 +23,7 @@ pip install .
 To remove the extension, execute:
 
 ```bash
-pip uninstall nersc_help_menu
+pip uninstall nersc-help-menu
 ```
 
 
