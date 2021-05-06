@@ -18,6 +18,12 @@ To install the extension, execute the following command inside the root `nersc-h
 pip install .
 ```
 
+The help menu is populated with links that are specified in the `overrides.json` file. Click 
+<a href="https://jupyterlab.readthedocs.io/en/latest/user/directories.html#overrides-json">this link</a> 
+to see where your overrides.json file is installed.
+
+View the example_overrides.json file above to see how to format this file
+
 ## Uninstall
 
 To remove the extension, execute:
