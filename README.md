@@ -12,10 +12,10 @@ A JupyterLab extension.
 
 ## Install
 
-To install the extension, execute:
+To install the extension, execute the following command inside the root `nersc_help_menu` folder:
 
 ```bash
-pip install nersc_help_menu
+pip install .
 ```
 
 ## Uninstall
