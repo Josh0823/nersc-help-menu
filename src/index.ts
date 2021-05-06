@@ -33,13 +33,11 @@ class IFrameWidget extends Widget {
 
     try {
       await fetch(path).then((res: Response) => {
-        console.log('Headers:');
-        console.log(res.headers.keys());
         if (res.ok && !res.headers.has('Access-Control-Allow-Origin')) {
           iframe.src = path;
         } else {
           // this means the fetch succeed but didn't return correct info
-          console.log('site failed with no code');
+          console.error('site failed with no code');
           return false;
         }
       });
@@ -91,7 +89,6 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Loop through links and add each as a window.open() command
     links.forEach((link: { name: string; url: string }) => {
-      // console.log(link);
       const command = `open-${link.name}`;
       commands.addCommand(command, {
         label: `${link.name}`,

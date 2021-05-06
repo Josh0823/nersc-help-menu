@@ -6,7 +6,7 @@
         "links": {
             "type": "array",
             "title": "NERSC Help Menu links",
-            "description": "What links to display in the NERSC help menu\nFormat: { name: string, url: string }\nExample: { name: \"Google\", url: \"google.com\" }",
+            "description": "What links to display in the NERSC help menu\nFormat: { name: string, url: string }\nExample: { name: \"Google\", url: \"google.com\" }\n",
             "default": []
         }
     },
