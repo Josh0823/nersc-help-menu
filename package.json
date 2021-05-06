@@ -14,11 +14,12 @@
   "license": "BSD-3-Clause",
   "author": {
     "name": "Josh Geden",
-    "email": ""
+    "email": "jgeden@lbl.gov"
   },
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
-    "style/**/*.{css,.js,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+    "style/**/*.{css,.js,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+    "schema/*.json"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -47,6 +48,7 @@
   "dependencies": {
     "@jupyterlab/application": "^3.0.0",
     "@jupyterlab/mainmenu": "^3.0.7",
+    "@jupyterlab/settingregistry": "^3.0.5",
     "fetch": "^1.1.0",
     "requests-helper": "^0.1.5"
   },
@@ -69,6 +71,7 @@
   "styleModule": "style/index.js",
   "jupyterlab": {
     "extension": true,
-    "outputDir": "nersc_help_menu/labextension"
+    "outputDir": "nersc_help_menu/labextension",
+    "schemaDir": "schema"
   }
 }

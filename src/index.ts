@@ -7,21 +7,9 @@ import {
 // import { WidgetTracker } from '@jupyterlab/apputils';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Menu, Widget } from '@lumino/widgets';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
-// Temporary way to get links
-// Eventually want to put this in config file
-const LINKS = [
-  {
-    name: 'NERSC Jupyter Docs',
-    url: 'https://docs.nersc.gov/services/jupyter'
-  },
-  {
-    name: 'JupyterHub Docs',
-    url: 'https://jupyterhub.readthedocs.io/en/stable'
-  }
-];
-
-// from https://github.com/timkpaine/jupyterlab_iframe/blob/main/js/src/index.ts
+// partially from https://github.com/timkpaine/jupyterlab_iframe/blob/main/js/src/index.ts
 let unique = 0;
 class IFrameWidget extends Widget {
   public constructor(title: string, path: string) {
@@ -50,13 +38,13 @@ class IFrameWidget extends Widget {
         if (res.ok && !res.headers.has('Access-Control-Allow-Origin')) {
           iframe.src = path;
         } else {
-          // this means the fetch failed
+          // this means the fetch succeed but didn't return correct info
           console.log('site failed with no code');
           return false;
         }
       });
     } catch (e) {
-      // the request failed so try to proxy instead
+      // this means the fetch failed
       console.log(e);
       return false;
     }
@@ -73,15 +61,28 @@ class IFrameWidget extends Widget {
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'nersc-help-menu:plugin',
   autoStart: true,
-  optional: [IMainMenu],
+  optional: [IMainMenu, ISettingRegistry],
   // requires: [IMainMenu, ILayoutRestorer],
   activate: async (
     app: JupyterFrontEnd,
-    mainMenu: IMainMenu
+    mainMenu: IMainMenu,
+    settingRegistry: ISettingRegistry | null
     // restorer: ILayoutRestorer
   ) => {
     console.log('JupyterLab extension nersc-help-menu is activated!');
     const { commands } = app;
+
+    let links = [];
+
+    if (settingRegistry) {
+      const settings = await settingRegistry.load('nersc-help-menu:plugin');
+      links = settings.get('links').composite as any;
+    }
+
+    if (links === [] || Object.keys(links).length === 0) {
+      console.error('NERSC Help Menu: No links are set in overrides.json');
+      return;
+    }
 
     const nerscHelpMenu: Menu = new Menu({ commands });
     nerscHelpMenu.title.label = 'NERSC Help';
@@ -89,7 +90,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     // let widget: MainAreaWidget<IFrameWidget>;
 
     // Loop through links and add each as a window.open() command
-    LINKS.forEach(link => {
+    links.forEach((link: { name: string; url: string }) => {
       // console.log(link);
       const command = `open-${link.name}`;
       commands.addCommand(command, {
@@ -99,7 +100,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           // use widget to open in new Jupyter tab
           const widget = new IFrameWidget(link.name, link.url);
           const response = await widget.createIFrame(link.name, link.url);
-          console.log(`Response: ${response}`);
+
           // tracker.add(widget);
 
           // check if the IFrame was created correctly
