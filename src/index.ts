@@ -1,10 +1,10 @@
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
-  // ILayoutRestorer
+  JupyterFrontEndPlugin,
+  ILayoutRestorer
 } from '@jupyterlab/application';
 
-// import { WidgetTracker } from '@jupyterlab/apputils';
+import { WidgetTracker } from '@jupyterlab/apputils';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Menu, Widget } from '@lumino/widgets';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -59,13 +59,12 @@ class IFrameWidget extends Widget {
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'nersc-help-menu:plugin',
   autoStart: true,
-  optional: [IMainMenu, ISettingRegistry],
-  // requires: [IMainMenu, ILayoutRestorer],
+  requires: [IMainMenu, ISettingRegistry, ILayoutRestorer],
   activate: async (
     app: JupyterFrontEnd,
     mainMenu: IMainMenu,
-    settingRegistry: ISettingRegistry | null
-    // restorer: ILayoutRestorer
+    settingRegistry: ISettingRegistry | null,
+    restorer: ILayoutRestorer
   ) => {
     console.log('JupyterLab extension nersc-help-menu is activated!');
     const { commands } = app;
@@ -98,20 +97,24 @@ const extension: JupyterFrontEndPlugin<void> = {
           const widget = new IFrameWidget(link.name, link.url);
           const response = await widget.createIFrame(link.name, link.url);
 
-          // tracker.add(widget);
-
           // check if the IFrame was created correctly
           // if so open it in a jupyter notebook tab
           // otherwise open it in a browser tab
           if (response) {
             app.shell.add(widget, 'main');
             app.shell.activateById(widget.id);
+
+            // find the links tracker and add the new widget to be tracked
+            trackers.forEach(t => {
+              if (response && t.name === link.name) {
+                if (!t.tracker.has(widget)) {
+                  t.tracker.add(widget);
+                }
+              }
+            });
           } else {
             window.open(link.url);
           }
-
-          // restoreCommand = command;
-          // console.log(`Restore command set to: (${restoreCommand})`);
         }
       });
 
@@ -119,15 +122,22 @@ const extension: JupyterFrontEndPlugin<void> = {
       nerscHelpMenu.addItem({ command });
     });
 
-    // Tried to set up restore for opened docs
-    // const tracker = new WidgetTracker<IFrameWidget>({
-    //   namespace: 'nersc-help-menu'
-    // });
-    // console.log(`Restoring with command: (${restoreCommand})`);
-    // restorer.restore(tracker, {
-    //   command: restoreCommand,
-    //   name: () => 'nersc-help-menu'
-    // });
+    // Create a tracker for every link
+    const trackers: any[] = [];
+    links.forEach((link: { name: string }) => {
+      trackers.push({
+        tracker: new WidgetTracker<IFrameWidget>({ namespace: link.name }),
+        name: `${link.name}`
+      });
+    });
+
+    // Try to restore any trackers
+    trackers.forEach(t => {
+      restorer.restore(t.tracker, {
+        command: `open-${t.name}`,
+        name: () => t.name
+      });
+    });
 
     // add NERSC help menu to main menu
     // mainMenu.addMenu(nerscHelpMenu, { rank: 2000 });
